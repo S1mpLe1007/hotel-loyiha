@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Manager — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.status-badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 600;
+  padding: 3px 10px; border-radius: 20px;
+}
+.status-pending  { background:#fef9c3; color:#854d0e; }
+.status-confirmed{ background:#dcfce7; color:#16a34a; }
+.status-cancelled{ background:#fee2e2; color:#dc2626; }
+
+.status-select {
+  font-size: 12px; padding: 4px 8px;
+  border: 1px solid #e2e8f0; border-radius: 7px;
+  font-family: inherit; color: #1e293b;
+  background: #fff; cursor: pointer; outline: none;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="fa-solid fa-building"></i></div>
+      <div>
+        <div class="logo-text">HotelManager</div>
+        <div class="logo-sub">Admin panel</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-page="dashboard">
+        <i class="fa-solid fa-chart-pie"></i> Dashboard
+      </div>
+      <div class="nav-item" data-page="hotels">
+        <i class="fa-solid fa-building-columns"></i> Mehmonxonalar
+      </div>
+      <div class="nav-item" data-page="add">
+        <i class="fa-solid fa-plus"></i> Yangi qo'shish
+      </div>
+      <div class="nav-item" data-page="bookings">
+        <i class="fa-solid fa-calendar-check"></i> Bronlar
+      </div>
+      <div class="nav-item" data-page="search">
+        <i class="fa-solid fa-magnifying-glass"></i> Qidirish
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <i class="fa-solid fa-circle" style="color:#4ade80;font-size:8px"></i>
+      Tizim ishlamoqda
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:13px;color:#64748b;margin-right:8px">🔑 {{ username }}</span>
+        <button class="btn-gold" id="add-btn">
+          <i class="fa-solid fa-plus"></i> Qo'shish
+        </button>
+        <button class="btn-outline" id="logout-btn" style="margin-left:8px">
+          <i class="fa-solid fa-right-from-bracket"></i> Chiqish
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label"><i class="fa-solid fa-building"></i> Jami mehmonxona</div>
+            <div class="stat-value" id="stat-total">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="fa-solid fa-dollar-sign"></i> O'rtacha narx</div>
+            <div class="stat-value gold" id="stat-avg">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="fa-solid fa-calendar-check"></i> Jami bronlar</div>
+            <div class="stat-value green" id="stat-bookings">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label"><i class="fa-solid fa-users"></i> Mijozlar</div>
+            <div class="stat-value" id="stat-clients">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Barcha mehmonxonalar</span>
+            <span class="badge badge-blue" id="dash-count">yuklanmoqda...</span>
+          </div>
+          <div class="table-wrap">
+            <table id="dash-table">
+              <thead><tr>
+                <th>Nomi</th><th>Hudud</th><th>Narx</th><th>Yulduz</th>
+                <th>WiFi</th><th>Nonushta</th><th>Parking</th>
+              </tr></thead>
+              <tbody id="dash-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOTELS PAGE -->
+      <div class="page" id="page-hotels">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Mehmonxonalar ro'yxati</span>
+            <button class="btn-primary btn-sm-btn" onclick="showPage('add')">
+              <i class="fa-solid fa-plus"></i> Yangi
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table id="hotels-table">
+              <thead><tr>
+                <th>ID</th><th>Nomi</th><th>Hudud</th><th>Narx</th>
+                <th>Yulduz</th><th>Qulayliklar</th><th>Amallar</th>
+              </tr></thead>
+              <tbody id="hotels-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD PAGE -->
+      <div class="page" id="page-add">
+        <div class="form-wrap">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title" id="form-title">Yangi mehmonxona qo'shish</span>
+            </div>
+            <div class="form-body">
+              <input type="hidden" id="edit-id">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Mehmonxona nomi *</label>
+                  <input class="form-input" id="f-name" placeholder="Masalan: Hyatt Regency">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Hudud *</label>
+                  <input class="form-input" id="f-region" placeholder="Toshkent">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Narx ($) *</label>
+                  <input class="form-input" id="f-price" type="number" placeholder="200">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Yulduz darajasi *</label>
+                  <div class="stars-select" id="stars-sel">
+                    <button class="star-btn" data-v="1">1★</button>
+                    <button class="star-btn" data-v="2">2★</button>
+                    <button class="star-btn" data-v="3">3★</button>
+                    <button class="star-btn on" data-v="4">4★</button>
+                    <button class="star-btn" data-v="5">5★</button>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Tavsif (ixtiyoriy)</label>
+                <input class="form-input" id="f-desc" placeholder="Mehmonxona haqida qisqa ma'lumot...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Qulayliklar</label>
+                <div class="amenities">
+                  <label class="amenity-chip">
+                    <input type="checkbox" id="f-wifi"> <i class="fa-solid fa-wifi"></i> WiFi
+                  </label>
+                  <label class="amenity-chip">
+                    <input type="checkbox" id="f-breakfast"> <i class="fa-solid fa-mug-hot"></i> Nonushta
+                  </label>
+                  <label class="amenity-chip">
+                    <input type="checkbox" id="f-parking"> <i class="fa-solid fa-square-parking"></i> Parking
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-footer">
+              <button class="btn-outline" onclick="resetForm()">
+                <i class="fa-solid fa-xmark"></i> Bekor qilish
+              </button>
+              <button class="btn-gold" id="save-btn" onclick="saveHotel()">
+                <i class="fa-solid fa-floppy-disk"></i> Saqlash
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS PAGE -->
+      <div class="page" id="page-bookings">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Barcha bronlar</span>
+            <span class="badge badge-blue" id="all-bookings-count">—</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr>
+                <th>ID</th>
+                <th>Mijoz</th>
+                <th>Mehmonxona</th>
+                <th>Hudud</th>
+                <th>Kirish</th>
+                <th>Chiqish</th>
+                <th>Mehmon</th>
+                <th>Narx</th>
+                <th>Status</th>
+                <th>Amal</th>
+              </tr></thead>
+              <tbody id="bookings-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH PAGE -->
+      <div class="page" id="page-search">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Mehmonxona qidirish</span>
+          </div>
+          <div class="search-panel">
+            <div class="search-fields">
+              <div class="form-group">
+                <label class="form-label">Hudud</label>
+                <input class="form-input" id="s-region" placeholder="Masalan: Toshkent">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Maksimal narx ($)</label>
+                <input class="form-input" id="s-price" type="number" placeholder="500">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Yulduz</label>
+                <select class="form-input" id="s-stars">
+                  <option value="">Barchasi</option>
+                  <option value="1">1 ★</option>
+                  <option value="2">2 ★★</option>
+                  <option value="3">3 ★★★</option>
+                  <option value="4">4 ★★★★</option>
+                  <option value="5">5 ★★★★★</option>
+                </select>
+              </div>
+              <button class="btn-primary" onclick="searchHotels()">
+                <i class="fa-solid fa-magnifying-glass"></i> Qidirish
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="search-table">
+              <thead><tr>
+                <th>Nomi</th><th>Hudud</th><th>Narx</th><th>Yulduz</th>
+                <th>WiFi</th><th>Nonushta</th><th>Parking</th>
+              </tr></thead>
+              <tbody id="search-tbody">
+                <tr><td colspan="7" class="empty-msg">
+                  <i class="fa-solid fa-magnifying-glass"></i><br>
+                  Qidirish mezonlarini kiriting
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">O'chirishni tasdiqlang</div>
+    <div class="modal-text">Bu mehmonxonani o'chirishni xohlaysizmi?</div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal()">Bekor</button>
+      <button class="btn-danger" id="confirm-delete">O'chirish</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/main.js"></script>
+</body>
+</html>

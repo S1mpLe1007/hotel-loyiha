@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Manager — Mijoz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.hotel-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.hotel-card {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hotel-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
+.hotel-card-header {
+  background: linear-gradient(135deg, #1a3c5e 0%, #234d78 100%);
+  padding: 20px;
+  color: #fff;
+}
+.hotel-card-name { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.hotel-card-region { font-size: 12px; opacity: 0.75; }
+.hotel-card-body { padding: 16px; }
+.hotel-card-price {
+  font-size: 22px; font-weight: 600; color: #b8973e; margin-bottom: 10px;
+}
+.hotel-card-price span { font-size: 12px; color: #94a3b8; font-weight: 400; }
+.hotel-amenities { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.amenity-tag {
+  font-size: 11px; padding: 3px 9px; border-radius: 20px;
+  background: #f1f5f9; color: #64748b; font-weight: 500;
+  display: flex; align-items: center; gap: 4px;
+}
+.amenity-tag.on { background: #dbeafe; color: #1d4ed8; }
+.btn-book {
+  width: 100%; padding: 10px; background: #c9a84c; color: #fff;
+  border: none; border-radius: 9px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn-book:hover { background: #b8973e; }
+
+/* BOOKING MODAL */
+.bmodal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: none; align-items: center; justify-content: center; z-index: 9000;
+}
+.bmodal-overlay.show { display: flex; }
+.bmodal {
+  background: #fff; border-radius: 18px;
+  padding: 32px; width: 440px; max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.bmodal-title { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.bmodal-hotel { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+.bform-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bform-group { margin-bottom: 14px; }
+.bform-label { font-size: 11px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 5px; }
+.bform-input {
+  width: 100%; padding: 10px 13px;
+  border: 1px solid #e2e8f0; border-radius: 9px;
+  font-family: inherit; font-size: 14px; color: #1e293b;
+  outline: none;
+}
+.bform-input:focus { border-color: #1a3c5e; }
+.price-preview {
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  border-radius: 10px; padding: 14px 16px;
+  margin-bottom: 16px; display: none;
+}
+.price-preview.show { display: block; }
+.price-row { display: flex; justify-content: space-between; font-size: 13px; color: #64748b; margin-bottom: 6px; }
+.price-total { display: flex; justify-content: space-between; font-size: 16px; font-weight: 600; color: #1e293b; border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 4px; }
+.bmodal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* STATUS BADGES */
+.status-pending { background: #fef9c3; color: #854d0e; }
+.status-confirmed { background: #dcfce7; color: #16a34a; }
+.status-cancelled { background: #fee2e2; color: #dc2626; }
+
+.booking-card {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 12px; padding: 18px;
+  margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.booking-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.booking-hotel-name { font-size: 15px; font-weight: 600; color: #1e293b; }
+.booking-hotel-region { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.booking-dates { font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.booking-price { font-size: 18px; font-weight: 600; color: #b8973e; }
+.booking-cancel {
+  background: none; border: 1px solid #e2e8f0;
+  border-radius: 7px; padding: 5px 12px;
+  font-family: inherit; font-size: 12px; color: #94a3b8;
+  cursor: pointer; transition: all 0.15s;
+}
+.booking-cancel:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="fa-solid fa-building"></i></div>
+      <div>
+        <div class="logo-text">HotelManager</div>
+        <div class="logo-sub">Mijoz paneli</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-page="hotels">
+        <i class="fa-solid fa-hotel"></i> Mehmonxonalar
+      </div>
+      <div class="nav-item" data-page="bookings">
+        <i class="fa-solid fa-calendar-check"></i> Bronlarim
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <i class="fa-solid fa-circle" style="color:#4ade80;font-size:8px"></i>
+      Mijoz rejimi
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="page-title">Mehmonxonalar</span>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:13px;color:#64748b;margin-right:8px">👤 {{ username }}</span>
+        <button class="btn-outline" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i> Chiqish
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- HOTELS PAGE -->
+      <div class="page active" id="page-hotels">
+        <div class="card" style="margin-bottom:20px">
+          <div style="padding:16px 22px;border-bottom:1px solid #e2e8f0">
+            <div class="search-fields">
+              <div class="form-group">
+                <label class="form-label">Hudud</label>
+                <input class="form-input" id="s-region" placeholder="Toshkent...">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Maks. narx ($)</label>
+                <input class="form-input" id="s-price" type="number" placeholder="500">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Yulduz</label>
+                <select class="form-input" id="s-stars">
+                  <option value="">Barchasi</option>
+                  <option value="1">1★</option>
+                  <option value="2">2★★</option>
+                  <option value="3">3★★★</option>
+                  <option value="4">4★★★★</option>
+                  <option value="5">5★★★★★</option>
+                </select>
+              </div>
+              <button class="btn-primary" onclick="loadHotels()">
+                <i class="fa-solid fa-magnifying-glass"></i> Qidirish
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="hotel-cards" id="hotel-cards">
+          <div style="color:#94a3b8;font-size:13px">Yuklanmoqda...</div>
+        </div>
+      </div>
+
+      <!-- BOOKINGS PAGE -->
+      <div class="page" id="page-bookings">
+        <div class="card" style="margin-bottom:18px;padding:16px 22px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-weight:600">Mening bronlarim</span>
+          <span class="badge badge-blue" id="my-booking-count">0 ta</span>
+        </div>
+        <div id="my-bookings-list">
+          <div class="empty-msg"><i class="fa-solid fa-calendar"></i><br>Hali bronlar yo'q</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="bmodal-overlay" id="bmodal">
+  <div class="bmodal">
+    <div class="bmodal-title">🏨 Mehmonxona band qilish</div>
+    <div class="bmodal-hotel" id="bmodal-hotel-name">—</div>
+
+    <input type="hidden" id="b-hotel-id">
+    <input type="hidden" id="b-hotel-price">
+
+    <div class="bform-row">
+      <div class="bform-group">
+        <label class="bform-label">Kirish sanasi</label>
+        <input class="bform-input" type="date" id="b-checkin">
+      </div>
+      <div class="bform-group">
+        <label class="bform-label">Chiqish sanasi</label>
+        <input class="bform-input" type="date" id="b-checkout">
+      </div>
+    </div>
+    <div class="bform-group">
+      <label class="bform-label">Mehmonlar soni</label>
+      <input class="bform-input" type="number" id="b-guests" value="1" min="1" max="10">
+    </div>
+    <div class="bform-group">
+      <label class="bform-label">Izoh (ixtiyoriy)</label>
+      <input class="bform-input" id="b-note" placeholder="Maxsus xohishlar...">
+    </div>
+
+    <div class="price-preview" id="price-preview">
+      <div class="price-row"><span>Kunlik narx</span><span id="prev-night">—</span></div>
+      <div class="price-row"><span>Tunlar soni</span><span id="prev-nights">—</span></div>
+      <div class="price-total"><span>Jami</span><span id="prev-total">—</span></div>
+    </div>
+
+    <div class="bmodal-footer">
+      <button class="btn-outline" onclick="closeBModal()">Bekor</button>
+      <button class="btn-gold" onclick="confirmBooking()">
+        <i class="fa-solid fa-check"></i> Band qilish
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// NAV
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const name = item.dataset.page;
+    document.getElementById('page-' + name).classList.add('active');
+    item.classList.add('active');
+    const titles = { hotels: 'Mehmonxonalar', bookings: 'Mening bronlarim' };
+    document.getElementById('page-title').textContent = titles[name] || name;
+    if (name === 'bookings') loadMyBookings();
+  });
+});
+
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login';
+});
+
+// LOAD HOTELS
+async function loadHotels() {
+  const region = document.getElementById('s-region').value.trim();
+  const price = document.getElementById('s-price').value.trim();
+  const stars = document.getElementById('s-stars').value;
+  const params = new URLSearchParams();
+  if (region) params.append('region', region);
+  if (price) params.append('max_price', price);
+  if (stars) params.append('stars', stars);
+
+  const res = await fetch('/api/hotels?' + params.toString());
+  if (res.status === 401) { window.location.href = '/login'; return; }
+  const hotels = await res.json();
+  const el = document.getElementById('hotel-cards');
+
+  if (!hotels.length) {
+    el.innerHTML = '<div style="color:#94a3b8;font-size:13px;padding:20px"><i class="fa-solid fa-building" style="margin-right:8px"></i>Mehmonxona topilmadi</div>';
+    return;
+  }
+
+  el.innerHTML = hotels.map(h => `
+    <div class="hotel-card">
+      <div class="hotel-card-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between">
+          <div>
+            <div class="hotel-card-name">${esc(h.name)}</div>
+            <div class="hotel-card-region"><i class="fa-solid fa-location-dot" style="margin-right:4px;opacity:0.7"></i>${esc(h.region)}</div>
+          </div>
+          <div style="background:rgba(201,168,76,0.25);padding:4px 10px;border-radius:20px;font-size:13px;color:#fcd34d;font-weight:600">
+            ${'★'.repeat(h.stars)}
+          </div>
+        </div>
+      </div>
+      <div class="hotel-card-body">
+        <div class="hotel-card-price">$${h.price} <span>/ kecha</span></div>
+        <div class="hotel-amenities">
+          <span class="amenity-tag ${h.wifi ? 'on' : ''}"><i class="fa-solid fa-wifi" style="font-size:10px"></i> WiFi</span>
+          <span class="amenity-tag ${h.breakfast ? 'on' : ''}"><i class="fa-solid fa-mug-hot" style="font-size:10px"></i> Nonushta</span>
+          <span class="amenity-tag ${h.parking ? 'on' : ''}"><i class="fa-solid fa-square-parking" style="font-size:10px"></i> Parking</span>
+        </div>
+        ${h.description ? `<p style="font-size:12px;color:#64748b;margin-bottom:12px">${esc(h.description)}</p>` : ''}
+        <button class="btn-book" onclick="openBooking(${h.id}, '${esc(h.name)}', ${h.price})">
+          <i class="fa-solid fa-calendar-plus"></i> Band qilish
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// BOOKING MODAL
+function openBooking(hotelId, hotelName, price) {
+  document.getElementById('b-hotel-id').value = hotelId;
+  document.getElementById('b-hotel-price').value = price;
+  document.getElementById('bmodal-hotel-name').textContent = hotelName + ' • $' + price + '/kecha';
+  document.getElementById('b-note').value = '';
+  document.getElementById('b-guests').value = 1;
+  document.getElementById('price-preview').classList.remove('show');
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('b-checkin').min = today;
+  document.getElementById('b-checkout').min = today;
+  document.getElementById('b-checkin').value = '';
+  document.getElementById('b-checkout').value = '';
+
+  document.getElementById('bmodal').classList.add('show');
+}
+
+function closeBModal() {
+  document.getElementById('bmodal').classList.remove('show');
+}
+
+// Update price preview
+['b-checkin', 'b-checkout'].forEach(id => {
+  document.getElementById(id).addEventListener('change', updatePreview);
+});
+
+function updatePreview() {
+  const ci = document.getElementById('b-checkin').value;
+  const co = document.getElementById('b-checkout').value;
+  const price = parseInt(document.getElementById('b-hotel-price').value);
+  const prev = document.getElementById('price-preview');
+
+  if (ci && co) {
+    const nights = Math.round((new Date(co) - new Date(ci)) / 86400000);
+    if (nights > 0) {
+      document.getElementById('prev-night').textContent = '$' + price;
+      document.getElementById('prev-nights').textContent = nights + ' kecha';
+      document.getElementById('prev-total').textContent = '$' + (price * nights);
+      prev.classList.add('show');
+    } else {
+      prev.classList.remove('show');
+    }
+  }
+}
+
+async function confirmBooking() {
+  const hotel_id = document.getElementById('b-hotel-id').value;
+  const check_in = document.getElementById('b-checkin').value;
+  const check_out = document.getElementById('b-checkout').value;
+  const guests = document.getElementById('b-guests').value;
+  const note = document.getElementById('b-note').value;
+
+  if (!check_in || !check_out) { showToast('Sanalarni kiriting!', 'error'); return; }
+
+  const res = await fetch('/api/bookings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hotel_id, check_in, check_out, guests, note })
+  });
+  const data = await res.json();
+
+  if (data.success) {
+    closeBModal();
+    showToast(`✅ Muvaffaqiyatli! ${data.nights} kecha, jami: $${data.total_price}`, 'success');
+  } else {
+    showToast(data.message, 'error');
+  }
+}
+
+// MY BOOKINGS
+async function loadMyBookings() {
+  const res = await fetch('/api/bookings/my');
+  if (res.status === 401) { window.location.href = '/login'; return; }
+  const bookings = await res.json();
+  document.getElementById('my-booking-count').textContent = bookings.length + ' ta';
+  const el = document.getElementById('my-bookings-list');
+
+  if (!bookings.length) {
+    el.innerHTML = '<div class="empty-msg"><i class="fa-solid fa-calendar"></i><br>Hali bronlar yo\'q<br><small>Mehmonxonalar bo\'limida band qiling</small></div>';
+    return;
+  }
+
+  const statusLabel = { pending: 'Kutilmoqda', confirmed: 'Tasdiqlangan', cancelled: 'Bekor qilingan' };
+
+  el.innerHTML = bookings.map(b => `
+    <div class="booking-card">
+      <div class="booking-card-top">
+        <div>
+          <div class="booking-hotel-name">${esc(b.hotel_name)}</div>
+          <div class="booking-hotel-region"><i class="fa-solid fa-location-dot" style="margin-right:4px"></i>${esc(b.region)}</div>
+          <div class="booking-dates">
+            <i class="fa-solid fa-calendar-days"></i>
+            ${b.check_in} → ${b.check_out}
+            <span style="color:#94a3b8">• ${b.guests} mehmon</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="booking-price">$${b.total_price}</div>
+          <span class="badge status-${b.status}" style="margin-top:6px;display:inline-block">${statusLabel[b.status] || b.status}</span>
+        </div>
+      </div>
+      ${b.note ? `<div style="font-size:12px;color:#64748b;padding:8px 12px;background:#f8fafc;border-radius:7px;margin-top:8px">${esc(b.note)}</div>` : ''}
+      ${b.status === 'pending' ? `
+      <div style="margin-top:10px;text-align:right">
+        <button class="booking-cancel" onclick="cancelBooking(${b.id})">
+          <i class="fa-solid fa-xmark"></i> Bekor qilish
+        </button>
+      </div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function cancelBooking(id) {
+  if (!confirm('Bronni bekor qilishni xohlaysizmi?')) return;
+  const res = await fetch('/api/bookings/' + id, { method: 'DELETE' });
+  const data = await res.json();
+  if (data.success) { showToast('Bron bekor qilindi', 'success'); loadMyBookings(); }
+}
+
+// UTILS
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// INIT
+loadHotels();
+</script>
+</body>
+</html>
